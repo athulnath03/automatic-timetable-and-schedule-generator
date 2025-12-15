@@ -1,0 +1,4 @@
+
+html, body, #root { height: 100%; margin: 0; }
+body { font-family: Inter, Roboto, Arial; background: #f4f6f8; }
+.app-content { padding: 24px; }

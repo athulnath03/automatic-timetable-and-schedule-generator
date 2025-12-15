@@ -1,0 +1,27 @@
+#!/bin/bash
+
+echo "Starting Automatic Timetable System..."
+
+# Start backend
+echo "Starting Flask backend..."
+cd backend
+python3 app.py &
+BACKEND_PID=$!
+
+# Start frontend
+echo "Starting React frontend..."
+cd ../frontend
+npm run dev &
+FRONTEND_PID=$!
+
+# Save PIDs
+cd ..
+echo $BACKEND_PID > backend.pid
+echo $FRONTEND_PID > frontend.pid
+
+echo "------------------------------------"
+echo "Frontend: http://localhost:5173"
+echo "Backend:  http://localhost:5000"
+echo "------------------------------------"
+echo "Press CTRL+C or run ./stop_timetable to stop"
+
