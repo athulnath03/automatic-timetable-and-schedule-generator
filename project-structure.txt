@@ -1,0 +1,33 @@
+.
+├── backend
+│   ├── app.py
+│   ├── __pycache__
+│   │   └── scheduler.cpython-310.pyc
+│   ├── requirements.txt
+│   └── scheduler.py
+├── backend.log
+├── CLEANUP_SUMMARY.md
+├── frontend
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── components
+│   │   │   ├── DashboardHome.jsx
+│   │   │   ├── GeneratePage.jsx
+│   │   │   ├── SavedPage.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── TimetableView.jsx
+│   │   │   └── Topbar.jsx
+│   │   ├── main.jsx
+│   │   └── styles.css
+│   └── vite.config.js
+├── Notes.txt
+├── project-structure.txt
+├── README.md
+├── stop_timetable
+├── timetable
+└── vite-dev.log
+
+5 directories, 25 files
