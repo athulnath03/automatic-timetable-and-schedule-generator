@@ -1,5 +1,5 @@
 
-# Automatic Timetable — Full Dashboard
+# Automatic Timetable Generator — Full Dashboard
 
 A full-stack intelligent timetable generation system designed to automate school schedule planning using a constraint-aware greedy scheduling algorithm.
 
@@ -7,64 +7,157 @@ The backend is built using Flask, providing RESTful APIs for timetable generatio
 
 The system demonstrates strong software engineering principles including separation of concerns, modular architecture, and efficient algorithmic scheduling logic. The project also supports production-style deployment where the React frontend is served as static assets through the Flask backend.
 
-Future improvements may include advanced conflict detection, optimization-based scheduling algorithms, database persistence, and multi-user authentication support.
 
+## 🏗️ System Architecture
 
-# System Architecture
-```mermaid
-## 🏗 System Architecture
+The following diagram outlines the dual-mode operation of the system, illustrating how the **Vite Dev Server** interacts with the **Flask API** during development, and how they merge into a single origin for production.
 
 ```mermaid
 flowchart TD
 
-U["User (Teacher/Admin)"]:::external
+%% =========================================================
+%% External Actor
+%% =========================================================
+U["User (Teacher/Admin)\nBrowser"]:::external
 
-subgraph "Development Mode"
-DEV_BROWSER["Browser (Dev)"]:::external
+%% =========================================================
+%% Development Runtime (2-process)
+%% =========================================================
+subgraph "Development Mode (two origins)"
+direction TB
+
+DEV_BROWSER["Browser Session\n(Dev)"]:::external
 
 subgraph "Frontend Dev Server"
-VITE["Vite Dev Server"]:::runtime
-SPA_DEV["React SPA"]:::frontend
+direction TB
+VITE["Vite Dev Server\nServes React SPA\nlocalhost:5173"]:::runtime
+SPA_DEV["React SPA (Dev)\nUI + Client State"]:::frontend
 end
 
 subgraph "Backend API Server"
-FLASK_DEV["Flask API"]:::runtime
-API_ROUTES_DEV["API Routes"]:::api
-SCHED_DEV["Greedy Scheduler"]:::domain
-end
-end
-
-subgraph "Production Mode"
-PROD_BROWSER["Browser (Prod)"]:::external
-
-subgraph "Flask Production Server"
-FLASK_PROD["Flask App Server"]:::runtime
-STATIC_SERVE["Serve Static Assets"]:::artifact
-DIST["Frontend Build Dist"]:::artifact
-end
+direction TB
+FLASK_DEV["Flask API Server (Dev)\nCORS enabled\n127.0.0.1:5000"]:::runtime
+API_ROUTES_DEV["API Routes\nGET /api/health\nPOST /api/generate"]:::api
+SCHED_DEV["Timetable Generator\nGreedy Scheduler"]:::domain
 end
 
-U --> DEV_BROWSER
-U --> PROD_BROWSER
+DEV_NOTE["Dev Routing\n5173 → 5000 (CORS)\nJSON over HTTP"]:::note
+end
 
-DEV_BROWSER --> VITE
-VITE --> SPA_DEV
-SPA_DEV --> API_ROUTES_DEV
-API_ROUTES_DEV --> SCHED_DEV
-SCHED_DEV --> API_ROUTES_DEV
+%% =========================================================
+%% Production Runtime (1-process, same origin)
+%% =========================================================
+subgraph "Production Mode (single origin)"
+direction TB
 
-PROD_BROWSER --> STATIC_SERVE
-STATIC_SERVE --> DIST
+PROD_BROWSER["Browser Session\n(Prod)"]:::external
 
-classDef external fill:#e5e7eb,stroke:#6b7280
-classDef runtime fill:#fff7ed,stroke:#c2410c
-classDef frontend fill:#dbeafe,stroke:#1d4ed8
-classDef backend fill:#dcfce7,stroke:#15803d
-classDef api fill:#bbf7d0,stroke:#166534
-classDef domain fill:#a7f3d0,stroke:#047857
-classDef artifact fill:#f3e8ff,stroke:#7e22ce
-```
+subgraph "Flask Server (Serves SPA + API)"
+direction TB
+FLASK_PROD["Flask App Server (Prod)\nSingle Origin :5000"]:::runtime
+STATIC_SERVE["Static Hosting\nServes built assets"]:::artifact
+DIST["Built Frontend Assets\n(frontend/dist)"]:::artifact
+API_ROUTES_PROD["API Routes\nGET /api/health\nPOST /api/generate"]:::api
+SCHED_PROD["Timetable Generator\nGreedy Scheduler"]:::domain
+end
 
+PROD_NOTE["Prod Routing\n/: serves SPA\n/api/*: serves JSON\nSame origin"]:::note
+end
+
+%% =========================================================
+%% Frontend Component / Page Flow (logical UI mapping)
+%% =========================================================
+subgraph "Frontend UI Composition (React)"
+direction TB
+APP["App Layout + Navigation"]:::frontend
+TOPBAR["Topbar"]:::frontend
+SIDEBAR["Sidebar"]:::frontend
+HOME["DashboardHome"]:::frontend
+
+GEN["GeneratePage\nCollect inputs:\n- days, periods\n- classes\n- subjects"]:::frontend
+VIEW["TimetableView\nRender generated timetable"]:::frontend
+SAVED["SavedPage\nSaved timetables (client-side)"]:::frontend
+
+STATE["React State\n(In-memory)"]:::state
+BSTORE[("Browser Storage\n(LocalStorage?)")]:::optional
+end
+
+%% =========================================================
+%% Shared Backend Internal Decomposition (source modules)
+%% =========================================================
+subgraph "Backend Modules (Source)"
+direction TB
+APP_PY["app.py\nTransport layer:\n- Routes\n- CORS (dev)\n- Static serve (prod)"]:::backend
+SCHED_PY["scheduler.py\nDomain logic:\nGreedy timetable generator"]:::domain
+REQS["requirements.txt\nBackend dependencies"]:::artifact
+end
+
+%% =========================================================
+%% Primary User Flows / Connections
+%% =========================================================
+
+U -->|"uses"| DEV_BROWSER
+U -->|"uses"| PROD_BROWSER
+
+%% Dev: serve SPA + call API
+DEV_BROWSER -->|"HTTP GET / (SPA)\n:5173"| VITE
+VITE -->|"serves HTML/JS/CSS"| SPA_DEV
+
+SPA_DEV -->|"renders"| APP
+APP -->|"layout"| TOPBAR
+APP -->|"layout"| SIDEBAR
+APP -->|"routes"| HOME
+APP -->|"routes"| GEN
+APP -->|"routes"| SAVED
+GEN -->|"updates"| STATE
+STATE -->|"drives UI"| VIEW
+
+GEN -->|"fetch(JSON)\nPOST /api/generate\n5173 → 5000"| API_ROUTES_DEV
+API_ROUTES_DEV -->|"calls generate()"| SCHED_DEV
+SCHED_DEV -->|"returns timetable"| API_ROUTES_DEV
+API_ROUTES_DEV -->|"HTTP 200 JSON"| GEN
+GEN -->|"stores result"| STATE
+
+DEV_BROWSER -->|"HTTP GET\n/api/health"| API_ROUTES_DEV
+DEV_NOTE --- VITE
+DEV_NOTE --- FLASK_DEV
+
+%% Dev backend wiring
+FLASK_DEV -->|"implemented in"| APP_PY
+API_ROUTES_DEV -->|"defined in"| APP_PY
+SCHED_DEV -->|"implemented in"| SCHED_PY
+APP_PY -->|"imports/calls"| SCHED_PY
+APP_PY -->|"uses deps"| REQS
+
+%% Prod wiring
+PROD_BROWSER -->|"HTTP GET / (Port 5000)"| STATIC_SERVE
+STATIC_SERVE -->|"serves"| DIST
+DIST -->|"loads SPA"| APP
+
+PROD_BROWSER -->|"HTTP JSON\nPOST /api/generate"| API_ROUTES_PROD
+API_ROUTES_PROD -->|"calls scheduler"| SCHED_PROD
+SCHED_PROD -->|"returns timetable"| API_ROUTES_PROD
+
+PROD_BROWSER -->|"HTTP GET\n/api/health"| API_ROUTES_PROD
+PROD_NOTE --- FLASK_PROD
+FLASK_PROD -->|"serves static from"| DIST
+FLASK_PROD -->|"implemented in"| APP_PY
+
+SAVED -->|"read/write"| BSTORE
+
+%% =========================================================
+%% Styles
+%% =========================================================
+classDef external fill:#e5e7eb,stroke:#6b7280,color:#111827,stroke-width:1px
+classDef runtime fill:#fff7ed,stroke:#c2410c,color:#111827,stroke-width:2px
+classDef frontend fill:#dbeafe,stroke:#1d4ed8,color:#0b1220,stroke-width:1px
+classDef backend fill:#dcfce7,stroke:#15803d,color:#0b1220,stroke-width:1px
+classDef api fill:#bbf7d0,stroke:#166534,color:#0b1220,stroke-width:1px
+classDef domain fill:#a7f3d0,stroke:#047857,color:#0b1220,stroke-width:1px
+classDef artifact fill:#f3e8ff,stroke:#7e22ce,color:#0b1220,stroke-width:1px
+classDef state fill:#cffafe,stroke:#0891b2,color:#0b1220,stroke-width:1px
+classDef optional fill:#ffffff,stroke:#6b7280,color:#111827,stroke-width:1px,stroke-dasharray: 5 5
+classDef note fill:#fef9c3,stroke:#a16207,color:#111827,stroke-width:1px,stroke-dasharray: 3 3
 2. Install backend requirements:
 
 ```bash
