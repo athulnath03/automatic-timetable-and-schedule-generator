@@ -1,4 +1,4 @@
-# 🗓️ Automatic Timetable Generator — Full Dashboard
+# Automatic Timetable Generator — Full Dashboard
 
 A full-stack intelligent timetable generation system designed to automate school schedule planning using a constraint-aware greedy scheduling algorithm.
 
@@ -8,7 +8,7 @@ The system demonstrates strong software engineering principles including separat
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 The following diagram outlines the dual-mode operation of the system, illustrating how the **Vite Dev Server** interacts with the **Flask API** during development, and how they merge into a single origin for production.
 
@@ -145,7 +145,7 @@ classDef note fill:#fef9c3,stroke:#a16207,color:#111827,stroke-width:1px,stroke-
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Prerequisites
 
@@ -194,7 +194,7 @@ npm run dev
 
 ---
 
-## 🛠️ Build for Production
+## Build for Production
 
 To serve the app as a single unit via Flask:
 
@@ -214,12 +214,11 @@ cd ..
 ```
 
 
-
 The Flask server will now serve the static files from `frontend/dist` at `http://127.0.0.1:5000`.
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 * `GET /api/health` — Service health check.
 * `POST /api/generate` — Generate a timetable.
@@ -241,19 +240,18 @@ The Flask server will now serve the static files from `frontend/dist` at `http:/
 
 ---
 
-## 📂 Files of Interest
+## Files of Interest
 
 * `backend/app.py`: Flask entry point and static file serving.
 * `backend/scheduler.py`: The core Greedy Algorithm logic.
 * `frontend/src/`: React source code (components and dashboard logic).
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 * **CORS Errors:** Ensure you are using the Vite server (5173) to access the UI during development; CORS is pre-configured in `app.py`.
 * **Backend Not Starting:** Check if port 5000 is already in use by another process (like macOS AirPlay Receiver).
 * **Process Management:** Use the provided `run` script to easily manage background processes.
 
+## Support
 
-**Would you like me to help you create a specific "Greedy Algorithm" explanation section to show off how the scheduling logic actually handles conflicts?**
-
-```
+If you like this project, consider giving it a ⭐ on GitHub!
